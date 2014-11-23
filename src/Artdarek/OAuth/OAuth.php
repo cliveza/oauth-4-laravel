@@ -116,13 +116,19 @@ class OAuth
      * @param  array  $scope
      * @return \OAuth\Common\Service\AbstractService
      */
-    public function consumer( $service, $url = null, $scope = null )
+    public function consumer( $service, $url = null, $scope = null, $accessToken = null, $accessTokenSecret = null )
     {
         // get config
         $this->setConfig( $service );
 
         // get storage object
         $storage = $this->createStorageInstance( $this->_storage_name );
+
+        if ( ! is_null($accessToken)) {
+            $token = $this->createAccessToken($accessToken, $accessTokenSecret);
+
+            $storage->storeAccessToken($service, $token);
+        }
 
         // create credentials object
         $credentials = new Credentials(
@@ -140,6 +146,24 @@ class OAuth
 
         // return the service consumer object
         return $this->_serviceFactory->createService($service, $credentials, $storage, $scope);
-
     }
+
+     /**
+     * Create an OAuth1 Access Token
+     *
+     * @param string $accessToken
+     * @param string $accessToken
+     * @return StdOAuth1Token
+     */
+    private function createAccessToken($accessToken, $accessTokenSecret = null)
+    {
+        $token = new \OAuth\OAuth1\Token\StdOAuth1Token($accessToken);
+
+        if ( ! is_null($accessTokenSecret)) {
+            $token->setAccessTokenSecret($accessTokenSecret);
+        }
+
+        return $token;
+    }
+
 }
